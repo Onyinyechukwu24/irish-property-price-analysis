@@ -485,3 +485,135 @@ write.csv(
 
 # Confirm successful saving
 file.exists("outputs/irish_property_price_cleaned.csv")
+
+
+
+# 4 : Data Exploratory
+
+# RQ1: How have property prices changed over time?
+
+# 4.1 Overall descriptive statistics
+
+# Calculate mean property price
+mean_price <- mean(
+  property_data_clean[["Price (€)"]],
+  na.rm = TRUE
+)
+
+# Calculate median property price
+median_price <- median(
+  property_data_clean[["Price (€)"]],
+  na.rm = TRUE
+)
+
+# Calculate minimum property price
+minimum_price <- min(
+  property_data_clean[["Price (€)"]],
+  na.rm = TRUE
+)
+
+# Calculate maximum property price
+maximum_price <- max(
+  property_data_clean[["Price (€)"]],
+  na.rm = TRUE
+)
+
+# Calculate standard deviation
+price_sd <- sd(
+  property_data_clean[["Price (€)"]],
+  na.rm = TRUE
+)
+
+# Display descriptive statistics
+cat("Mean price: €", mean_price, "\n")
+cat("Median price: €", median_price, "\n")
+cat("Minimum price: €", minimum_price, "\n")
+cat("Maximum price: €", maximum_price, "\n")
+cat("Standard deviation: €", price_sd, "\n")
+
+
+
+# Reload cleaned dataset
+property_data_clean <- read.csv(
+  "outputs/irish_property_price_cleaned.csv",
+  stringsAsFactors = FALSE,
+  check.names = FALSE,
+  na.strings = c("", "NA")
+)
+
+
+# Convert sale date back to Date format
+property_data_clean[["Date of Sale (dd/mm/yyyy)"]] <-
+  as.Date(
+    property_data_clean[["Date of Sale (dd/mm/yyyy)"]],
+    format = "%Y-%m-%d"
+  )
+
+# Ensure property price is numeric
+property_data_clean[["Price (€)"]] <-
+  as.numeric(property_data_clean[["Price (€)"]])
+
+
+
+# Check dataset dimensions
+dim(property_data_clean)
+
+# Check data types
+sapply(
+  property_data_clean[
+    c("Date of Sale (dd/mm/yyyy)", "Price (€)")
+  ],
+  class
+)
+
+# Check missing dates and prices
+sum(is.na(property_data_clean[["Date of Sale (dd/mm/yyyy)"]]))
+sum(is.na(property_data_clean[["Price (€)"]]))
+
+# 4 : Statistics 
+
+# TASK 4.1: DESCRIPTIVE STATISTICS
+
+mean_price <- mean(property_data_clean[["Price (€)"]])
+median_price <- median(property_data_clean[["Price (€)"]])
+minimum_price <- min(property_data_clean[["Price (€)"]])
+maximum_price <- max(property_data_clean[["Price (€)"]])
+price_sd <- sd(property_data_clean[["Price (€)"]])
+
+cat("Mean price: €", mean_price, "\n")
+cat("Median price: €", median_price, "\n")
+cat("Minimum price: €", minimum_price, "\n")
+cat("Maximum price: €", maximum_price, "\n")
+cat("Standard deviation: €", price_sd, "\n")
+
+
+# task 4.2 property prices 
+
+property_data_clean$Sale_Year <- as.integer(
+  format(
+    property_data_clean[["Date of Sale (dd/mm/yyyy)"]],
+    "%Y"
+  )
+)
+
+annual_median <- aggregate(
+  property_data_clean[["Price (€)"]],
+  by = list(Year = property_data_clean$Sale_Year),
+  FUN = median
+)
+
+names(annual_median)[2] <- "Median_Price"
+
+print(annual_median)
+
+plot(
+  annual_median$Year,
+  annual_median$Median_Price,
+  type = "o",
+  main = "Median Irish Residential Property Prices Over Time",
+  xlab = "Year",
+  ylab = "Median Property Price (€)",
+  col = "blue",
+  pch = 16
+)
+
