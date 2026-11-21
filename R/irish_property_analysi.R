@@ -165,7 +165,6 @@ hist(
 
 # 2.5: OUTLIER
 
-
 # Calculate first quartile
 Q1 <- quantile(
   sale_price_numeric,
@@ -315,3 +314,174 @@ table(
   property_data$Potential_Outlier,
   property_data[["Description of Property"]]
 )
+
+# 3:1 Data preparation and cleaning 
+
+property_data_clean <- property_data[
+  , names(property_data) != "Potential_Outlier",
+  drop = FALSE
+]
+
+# Check original working copy dimensions
+dim(property_data_clean)
+
+# 3.2 Removing duplicates 
+
+# Count duplicates before removal
+duplicates_before <- sum(
+  duplicated(property_data_clean)
+)
+
+# Remove exact duplicate records
+property_data_clean <- property_data_clean[
+  !duplicated(property_data_clean),
+]
+
+# Count duplicates after removal
+duplicates_after <- sum(
+  duplicated(property_data_clean)
+)
+
+# Display results
+cat("Duplicates before cleaning:",
+    duplicates_before, "\n")
+
+cat("Duplicates after cleaning:",
+    duplicates_after, "\n")
+
+# Check cleaned dataset dimensions
+dim(property_data_clean)
+
+
+
+# 3.3 Finding the missing value 
+
+# Count missing values after duplicate removal
+missing_clean <- colSums(is.na(property_data_clean))
+
+# Calculate missing percentages
+missing_clean_percentage <- round(
+  colMeans(is.na(property_data_clean)) * 100,
+  2
+)
+
+# Create summary table
+missing_clean_summary <- data.frame(
+  Column = names(property_data_clean),
+  Missing_Values = missing_clean,
+  Missing_Percentage = missing_clean_percentage
+)
+
+# Display results
+print(missing_clean_summary)
+
+
+
+#3.4 finding missimg values 
+
+
+# Confirm missing values remain identifiable
+colSums(is.na(property_data_clean))
+
+# Check dataset dimensions
+dim(property_data_clean)
+
+# Confirm the number of columns
+ncol(property_data_clean)
+
+
+# 3.5 dATA TYPE 
+
+property_data_clean[["Date of Sale (dd/mm/yyyy)"]] <-
+  as.Date(
+    property_data_clean[["Date of Sale (dd/mm/yyyy)"]],
+    format = "%d/%m/%Y"
+  )
+
+# Convert Price (€) into numeric format
+property_data_clean[["Price (€)"]] <-
+  as.numeric(
+    gsub(
+      "[€,]",
+      "",
+      property_data_clean[["Price (€)"]]
+    )
+  )
+
+# Check converted data types
+sapply(
+  property_data_clean[
+    c("Date of Sale (dd/mm/yyyy)", "Price (€)")
+  ],
+  class
+)
+
+# Display first six converted records
+head(
+  property_data_clean[
+    c("Date of Sale (dd/mm/yyyy)", "Price (€)")
+  ]
+)
+
+# Display summary statistics
+summary(
+  property_data_clean[
+    c("Date of Sale (dd/mm/yyyy)", "Price (€)")
+  ]
+)
+
+# 3.6 Data validation 
+
+
+# Check date conversion
+cat(
+  "Missing dates:",
+  sum(is.na(property_data_clean[["Date of Sale (dd/mm/yyyy)"]])),
+  "\n"
+)
+
+# Check price conversion
+cat(
+  "Missing prices:",
+  sum(is.na(property_data_clean[["Price (€)"]])),
+  "\n"
+)
+
+# Check final dataset dimensions
+cat("Final rows:", nrow(property_data_clean), "\n")
+cat("Final columns:", ncol(property_data_clean), "\n")
+
+# Check data types
+str(property_data_clean)
+
+# Check remaining exact duplicates
+cat(
+  "Remaining duplicates:",
+  sum(duplicated(property_data_clean)),
+  "\n"
+)
+
+write.csv(
+  property_data_clean,
+  "outputs/irish_property_price_cleaned.csv",
+  row.names = FALSE,
+  na = ""
+)
+
+# Confirm file was saved
+file.exists("outputs/irish_property_price_cleaned.csv")
+
+# Select the GitHub repository folder
+setwd(choose.dir())
+
+
+
+write.csv(
+  property_data_clean,
+  "outputs/irish_property_price_cleaned.csv",
+  row.names = FALSE,
+  na = ""
+)
+
+# Confirm successful saving
+file.exists("outputs/irish_property_price_cleaned.csv")
