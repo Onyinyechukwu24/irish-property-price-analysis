@@ -617,3 +617,67 @@ plot(
   pch = 16
 )
 
+# 4.3 the property prices by the county 
+
+# Calculate median property price by county
+county_median <- aggregate(
+  property_data_clean[["Price (€)"]],
+  by = list(
+    County = property_data_clean$County
+  ),
+  FUN = median,
+  na.rm = TRUE
+)
+
+# Rename price column
+names(county_median)[2] <- "Median_Price"
+
+# Sort counties from highest to lowest
+county_median <- county_median[
+  order(county_median$Median_Price, decreasing = TRUE),
+]
+
+# Display county results
+print(county_median)
+
+
+
+# Display five counties with highest median prices
+top_5_counties <- head(county_median, 5)
+
+print(top_5_counties)
+
+
+
+
+# the five most expensive counties
+
+barplot(
+  top_5_counties$Median_Price,
+  names.arg = top_5_counties$County,
+  main = "Five Most Expensive Counties in Ireland",
+  xlab = "County",
+  ylab = "Median Property Price (€)",
+  col = "lightblue",
+  las = 2,
+  cex.names = 0.8
+)
+ 
+# edidted plot 
+
+#Improved horizontal bar chart
+
+par(mar = c(5, 8, 4, 2))
+
+barplot(
+  top_5_counties$Median_Price,
+  names.arg = top_5_counties$County,
+  horiz = TRUE,
+  main = "Five Most Expensive Counties in Ireland",
+  xlab = "Median Property Price (€)",
+  col = "lightblue",
+  las = 1,
+  cex.names = 0.9
+)
+
+par(mar = c(5, 4, 4, 2) + 0.1)
