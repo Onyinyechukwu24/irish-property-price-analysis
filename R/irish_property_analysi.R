@@ -816,3 +816,102 @@ barplot(
   ylim = c(0, max(property_medians) * 1.2)
 )
 
+# 4.6 transaction
+
+# Compare median prices by market-price status
+
+market_price_comparison <- aggregate(
+  property_data_clean[["Price (€)"]],
+  by = list(
+    Market_Status = property_data_clean[["Not Full Market Price"]]
+  ),
+  FUN = median,
+  na.rm = TRUE
+)
+
+names(market_price_comparison)[2] <- "Median_Price"
+
+print(market_price_comparison)
+
+
+
+# Compare median prices by VAT status
+
+vat_comparison <- aggregate(
+  property_data_clean[["Price (€)"]],
+  by = list(
+    VAT_Status = property_data_clean[["VAT Exclusive"]]
+  ),
+  FUN = median,
+  na.rm = TRUE
+)
+
+names(vat_comparison)[2] <- "Median_Price"
+
+print(vat_comparison)
+
+
+
+png(
+  "outputs/figures/market_price_status.png",
+  width = 1400,
+  height = 900,
+  res = 150
+)
+
+par(mar = c(5, 5, 4, 2))
+
+barplot(
+  market_price_comparison$Median_Price,
+  names.arg = market_price_comparison$Market_Status,
+  main = "Median Prices by Market Price Status",
+  xlab = "Not Full Market Price",
+  ylab = "Median Property Price (€)",
+  col = "lightblue"
+)
+
+dev.off()
+
+
+
+
+
+# Save VAT comparison graph
+png(
+  "outputs/figures/vat_status_comparison.png",
+  width = 1400,
+  height = 900,
+  res = 150
+)
+
+par(mar = c(5, 5, 4, 2))
+
+barplot(
+  vat_comparison$Median_Price,
+  names.arg = vat_comparison$VAT_Status,
+  main = "Median Prices by VAT Status",
+  xlab = "VAT Exclusive",
+  ylab = "Median Property Price (€)",
+  col = "lightblue"
+)
+
+dev.off()
+
+
+
+file.exists("outputs/figures/market_price_status.png")
+
+file.exists("outputs/figures/vat_status_comparison.png")
+
+
+
+# Market price status counts
+table(property_data_clean[["Not Full Market Price"]])
+
+# VAT status counts
+table(property_data_clean[["VAT Exclusive"]])
+
+
+getwd()
+
+list.files("outputs/figures")
