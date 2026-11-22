@@ -681,3 +681,138 @@ barplot(
 )
 
 par(mar = c(5, 4, 4, 2) + 0.1)
+
+
+# 4 : property type 
+
+# Examine property description categories
+property_type_counts <- table(
+  property_data_clean[["Description of Property"]],
+  useNA = "ifany"
+)
+
+# Display property types and their frequencies
+print(property_type_counts)
+
+
+# 4 : property type classifcation 
+
+# Extract property descriptions
+property_description <-
+  property_data_clean[["Description of Property"]]
+
+# Create standardised property categories
+property_data_clean$Property_Type <- ifelse(
+  grepl("Nua", property_description, ignore.case = TRUE),
+  "New",
+  ifelse(
+    grepl(
+      "Second-Hand|Ath",
+      property_description,
+      ignore.case = TRUE
+    ),
+    "Second-Hand",
+    "Other/Unclassified"
+  )
+)
+
+# Display standardised categories
+table(property_data_clean$Property_Type)
+
+# Check that all records have been classified
+sum(is.na(property_data_clean$Property_Type))
+
+#task 4.4 compare prices 
+
+# Calculate median prices by property type
+property_type_median <- aggregate(
+  property_data_clean[["Price (€)"]],
+  by = list(
+    Property_Type = property_data_clean$Property_Type
+  ),
+  FUN = median,
+  na.rm = TRUE
+)
+
+# Rename price column
+names(property_type_median)[2] <- "Median_Price"
+
+# Calculate transaction counts
+property_type_counts <- table(
+  property_data_clean$Property_Type
+)
+
+# Display median prices
+print(property_type_median)
+
+# Display transaction counts
+print(property_type_counts)
+
+# 4.5 property classifying 
+
+
+property_description <-
+  property_data_clean[["Description of Property"]]
+
+# Create standardised categories
+property_data_clean$Property_Type <-
+  rep("Other/Unclassified", length(property_description))
+
+# Identify new properties (English and Irish)
+new_properties <- grepl(
+  "New Dwelling|Nua",
+  property_description,
+  ignore.case = TRUE
+)
+
+# Identify second-hand properties (English and Irish)
+second_hand_properties <- grepl(
+  "Second-Hand|Ath",
+  property_description,
+  ignore.case = TRUE
+)
+
+# Assign categories
+property_data_clean$Property_Type[new_properties] <- "New"
+
+property_data_clean$Property_Type[second_hand_properties] <-
+  "Second-Hand"
+
+# Display corrected categories
+table(property_data_clean$Property_Type)
+
+
+
+# Calculated median prices
+property_type_median <- aggregate(
+  property_data_clean[["Price (€)"]],
+  by = list(
+    Property_Type = property_data_clean$Property_Type
+  ),
+  FUN = median,
+  na.rm = TRUE
+)
+
+names(property_type_median)[2] <- "Median_Price"
+
+# Display results
+print(property_type_median)
+
+
+#4.5 new vesrus second hand 
+
+
+#  median price values
+property_medians <- property_type_median$Median_Price
+
+#  comparison bar chart
+barplot(
+  property_medians,
+  names.arg = property_type_median$Property_Type,
+  main = "Median Prices: New vs Second-Hand Properties",
+  xlab = "Property Type",
+  ylab = "Median Property Price (€)",
+  col = "lightPink",
+  ylim = c(0, max(property_medians) * 1.2)
+)
+
