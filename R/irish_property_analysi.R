@@ -915,3 +915,348 @@ table(property_data_clean[["VAT Exclusive"]])
 getwd()
 
 list.files("outputs/figures")
+
+# Check the column names
+names(property_data_clean)
+
+# Check the structure and data types
+str(property_data_clean)
+
+
+# Check the number of rows and columns
+dim(property_data_clean)
+
+#county
+table(property_data_clean$County)
+#type of property 
+table(property_data_clean$Property_Type)
+#full-market-price indicator
+table(property_data_clean$`Not Full Market Price`)
+#VAT
+table(property_data_clean$`VAT Exclusive`)
+# property description
+table(property_data_clean$`Description of Property`)
+
+
+
+# Select variables for encoding and PCA
+pca_data <- property_data_clean[, c(
+  "Price (€)",
+  "Sale_Year",
+  "County",
+  "Property_Type",
+  "Not Full Market Price",
+  "VAT Exclusive"
+)]
+
+# Check the new dataset
+dim(pca_data)
+str(pca_data)
+
+
+# encoding to categorical variables
+pca_encoded <- model.matrix(
+  ~ Price + Sale_Year + County + Property_Type +
+    `Not Full Market Price` + `VAT Exclusive` - 1,
+  data = data.frame(
+    Price = pca_data$`Price (€)`,
+    Sale_Year = pca_data$Sale_Year,
+    County = pca_data$County,
+    Property_Type = pca_data$Property_Type,
+    `Not Full Market Price` = pca_data$`Not Full Market Price`,
+    `VAT Exclusive` = pca_data$`VAT Exclusive`,
+    check.names = FALSE
+  )
+)
+
+# Check encoded dataset dimensions
+dim(pca_encoded)
+
+# Display encoded column names
+colnames(pca_encoded)
+
+# Check for missing values
+sum(is.na(pca_encoded))
+
+# Check for infinite values
+sum(!is.finite(pca_encoded))
+
+# Review the numerical summary
+summary(pca_encoded)
+
+
+# Standardise all encoded variables
+pca_scaled <- scale(pca_encoded)
+
+# Check the scaled dataset
+dim(pca_scaled)
+
+# Check column means after scaling
+round(colMeans(pca_scaled), 4)
+
+# Check column standard deviations
+round(apply(pca_scaled, 2, sd), 4)
+
+
+# Apply Principal Component Analysis
+pca_result <- prcomp(
+  pca_scaled,
+  center = FALSE,
+  scale. = FALSE
+)
+
+#PCA summary
+summary(pca_result)
+
+# Display standard deviations of principal components
+pca_result$sdev
+
+# Display the first six principal component loading
+round(pca_result$rotation[, 1:6], 4)
+
+
+# Extract principal component standard deviations
+pc_sd <- pca_result$sdev
+
+
+# Calculate variance explained
+variance_explained <- pca_result$sdev^2 /
+  sum(pca_result$sdev^2)
+
+# Calculate cumulative variance
+cumulative_variance <- cumsum(variance_explained)
+
+# Display cumulative variance
+round(cumulative_variance, 4)
+
+
+# Components required for variance thresholds
+which(cumulative_variance >= 0.80)[1]
+which(cumulative_variance >= 0.90)[1]
+which(cumulative_variance >= 0.95)[1]
+
+
+# Extract principal component standard deviations
+pc_sd <- pca_result$sdev
+
+
+# Create scree plot
+plot(
+  pc_sd,
+  type = "b",
+  main = "Scree Plot of Principal Components",
+  xlab = "Principal Components",
+  ylab = "Standard Deviation",
+  pch = 19
+)
+
+
+# Check the numerical rank of the scaled dataset
+qr(pca_scaled)$rank
+
+
+# Save PCA variance results
+write.csv(
+  data.frame(
+    Component = paste0("PC", 1:length(variance_explained)),
+    Variance_Explained = variance_explained,
+    Cumulative_Variance = cumulative_variance
+  ),
+  "outputs/pca_variance_results.csv",
+  row.names = FALSE
+)
+
+
+file.exists("outputs/pca_variance_results.csv")
+
+
+# Select numerical variables for comparison
+pca_numeric <- pca_encoded[, c("Price", "Sale_Year")]
+
+# Standardise the numerical variables
+pca_numeric_scaled <- scale(pca_numeric)
+
+# Apply PCA
+pca_numeric_result <- prcomp(
+  pca_numeric_scaled,
+  center = FALSE,
+  scale. = FALSE
+)
+
+# SHOW  PCA summary
+summary(pca_numeric_result)
+
+
+
+# SHOW numerical PCA loadings
+round(pca_numeric_result$rotation, 4)
+
+
+
+# Scree plot for numerical-only PCA
+plot(
+  pca_numeric_result$sdev,
+  type = "b",
+  main = "Scree Plot: Numerical Variables PCA",
+  xlab = "Principal Components",
+  ylab = "Standard Deviation",
+  pch = 19
+)
+
+
+# Calculate correlation between price and sale year
+cor(pca_numeric[, "Price"], pca_numeric[, "Sale_Year"])
+
+
+
+# Save numerical PCA variance results
+numeric_variance <- pca_numeric_result$sdev^2 /
+  sum(pca_numeric_result$sdev^2)
+
+write.csv(
+  data.frame(
+    Component = paste0("PC", 1:2),
+    Variance_Explained = numeric_variance,
+    Cumulative_Variance = cumsum(numeric_variance)
+  ),
+  "outputs/pca_numeric_comparison.csv",
+  row.names = FALSE
+)
+
+# Verify saved file
+file.exists("outputs/pca_numeric_comparison.csv")
+
+
+# Retain the first 26 principal components
+pca_reduced_90 <- pca_result$x[, 1:26]
+
+# Check the reduced dataset dimensions
+dim(pca_reduced_90)
+
+# Check the variance retained
+round(cumulative_variance[26], 4)
+
+
+
+# Save the reduced PCA dataset
+write.csv(
+  pca_reduced_90,
+  "outputs/pca_reduced_90.csv",
+  row.names = FALSE
+)
+
+# Verify that the file exists
+file.exists("outputs/pca_reduced_90.csv")
+
+
+
+# Save the PCA scree plot
+png(
+  "outputs/pca_scree_plot.png",
+  width = 1200,
+  height = 800
+)
+
+plot(
+  pca_result$sdev,
+  type = "b",
+  main = "Scree Plot of Principal Components",
+  xlab = "Principal Components",
+  ylab = "Standard Deviation",
+  pch = 19
+)
+
+dev.off()
+
+
+
+# find the strongest variable loadings
+for (i in 1:5) {
+  cat("\nPrincipal Component", i, "\n")
+  
+  loadings <- pca_result$rotation[, i]
+  
+  print(
+    sort(abs(loadings), decreasing = TRUE)[1:5]
+  )
+}
+
+
+# Create PCA biplot
+biplot(
+  pca_result,
+  choices = c(1, 2),
+  scale = 0,
+  cex = 0.5,
+  main = "PCA Biplot: First Two Principal Components"
+)
+
+
+# Select a reproducible sample of 3,000 observations
+set.seed(123)
+
+sample_rows <- sample(
+  nrow(pca_result$x),
+  3000
+)
+
+# Extract first two principal component scores
+pca_sample <- pca_result$x[
+  sample_rows,
+  1:2
+]
+
+# Save PCA scatter plot
+png(
+  "outputs/pca_sample_scatter.png",
+  width = 1600,
+  height = 1200,
+  res = 150
+)
+
+plot(
+  pca_sample[, 1],
+  pca_sample[, 2],
+  pch = 16,
+  cex = 0.4,
+  col = "steelblue",
+  main = "PCA: First Two Principal Components",
+  xlab = "Principal Component 1",
+  ylab = "Principal Component 2"
+)
+
+dev.off()
+
+file.exists("outputs/pca_sample_scatter.png")
+
+
+
+
+# Extract loadings for the first five components
+pca_loadings <- pca_result$rotation[, 1:5]
+
+# Save the loadings
+write.csv(
+  pca_loadings,
+  "outputs/pca_loadings.csv"
+)
+
+# Verify the file
+file.exists("outputs/pca_loadings.csv")
+
+
+# Check saved PCA output files
+pca_files <- c(
+  "outputs/pca_variance_results.csv",
+  "outputs/pca_numeric_comparison.csv",
+  "outputs/pca_sample_scatter.png",
+  "outputs/pca_loadings.csv",
+  "outputs/pca_reduced_90.csv",
+  "outputs/pca_scree_plot.png"
+)
+
+data.frame(
+  File = pca_files,
+  Exists = file.exists(pca_files)
+)
+
